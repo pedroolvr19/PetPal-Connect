@@ -1,36 +1,33 @@
-🐾 PetPal Connect
-Sistema web para gestão de saúde e cuidados de animais de estimação (Vacinas, Medicamentos, Agenda e Perfil).
+PET HEALTH
+Sistema completo de gestão de saúde veterinária com geolocalização, relatórios e acompanhamento clínico.
 
-🛠️ Tecnologias Utilizadas
-Frontend: React, Vite
+🌟 Funcionalidades
+Autenticação: Login e Cadastro de tutores (Supabase Auth).
 
-Linguagem: JavaScript (JSX)
+Gestão de Pets: Cadastro com foto, edição e histórico.
 
-Estilização: Tailwind CSS
+Saúde: Gráfico de evolução de peso e linha do tempo de eventos.
 
-Ícones & UI: Lucide React, Radix UI (Simulado)
+Agenda: Calendário interativo para vacinas e consultas.
 
-Animações: Framer Motion
+Relatórios: Geração de PDF profissional com histórico do pet.
 
-Backend (BaaS): Supabase (PostgreSQL)
+Geolocalização: Mapa interativo com veterinários reais (Olinda/PE).
 
- Como Rodar o Projeto
+Documentos: Upload de exames e receitas.
 
+⚡ Instalação Rápida
+1. Instalar Dependências
+Bash
 
-npm install react-router-dom lucide-react framer-motion clsx tailwind-merge date-fns lodash @supabase/supabase-js
-
-
-
-npm install -D tailwindcss postcss autoprefixer
-3. Configuração do Banco de Dados (Supabase)
-Crie um projeto no Supabase.
-
-Vá no SQL Editor do Supabase e rode este script para criar as tabelas:
+npm install
+2. Configurar Banco de Dados (Supabase)
+Vá no SQL Editor do Supabase e rode este script completo para criar todas as tabelas:
 
 SQL
 
--- Tabela de Pets
-create table pets (
+-- 1. Tabela de Pets
+create table if not exists pets (
   id uuid default gen_random_uuid() primary key,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   nome text not null,
@@ -42,13 +39,40 @@ create table pets (
   cor text,
   foto_url text,
   observacoes text,
+  alergias text, -- Novo campo
   data_nascimento date,
   castrado boolean default false,
   microchip text
 );
 
--- Tabela de Medicamentos
-create table medicamentos (
+-- 2. Tabela de Histórico de Peso (Para o Gráfico)
+create table if not exists pesos (
+  id uuid default gen_random_uuid() primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  pet_id uuid references pets(id) not null,
+  peso numeric not null,
+  data_pesagem date default current_date
+);
+
+-- 3. Tabela de Eventos Médicos (Agenda/Histórico)
+create table if not exists eventos_medicos (
+  id uuid default gen_random_uuid() primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  pet_id uuid references pets(id) not null,
+  tipo text not null,
+  titulo text not null,
+  descricao text,
+  data text,
+  hora text,
+  veterinario text,
+  clinica text,
+  status text default 'agendado',
+  preco numeric,
+  lembrete boolean default true
+);
+
+-- 4. Tabela de Medicamentos
+create table if not exists medicamentos (
   id uuid default gen_random_uuid() primary key,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   pet_id uuid references pets(id) not null,
@@ -61,35 +85,25 @@ create table medicamentos (
   status text default 'ativo'
 );
 
--- Tabela de Eventos Médicos (Calendário)
-create table eventos_medicos (
-  id uuid default gen_random_uuid() primary key,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  pet_id uuid references pets(id) not null,
-  tipo text not null,
-  titulo text not null,
-  descricao text,
-  data date,
-  hora text,
-  veterinario text,
-  clinica text,
-  status text default 'agendado',
-  preco numeric,
-  lembrete boolean default true
-);
-4. Configuração das Variáveis de Ambiente
-Crie um arquivo chamado .env na raiz do projeto e adicione suas chaves do Supabase (pegue em Project Settings > API):
+-- 5. Configurar Bucket de Fotos (Storage)
+insert into storage.buckets (id, name, public) values ('pet-photos', 'pet-photos', true);
+3. Configurar Armazenamento (Manual)
+Caso o script acima não crie o bucket automaticamente:
 
-Snippet de código
+Vá em Storage no menu do Supabase.
 
-VITE_SUPABASE_URL=Sua_URL_do_Supabase_Aqui
-VITE_SUPABASE_ANON_KEY=Sua_Chave_Anon_Public_Aqui
-(Caso prefira, pode colocar direto no arquivo src/lib/supabase.js).
+Crie um bucket chamado pet-photos.
 
-5. Executar o Projeto
-Para iniciar o servidor de desenvolvimento:
+Marque a opção Public Bucket.
 
-Bash
+4. Configurar Variáveis de Ambiente
+Crie (ou edite) o arquivo .env na raiz do projeto:
+
+
+
+VITE_SUPABASE_URL=Sua_URL_Do_Supabase
+VITE_SUPABASE_ANON_KEY=Sua_Chave_Anonima_Publica
+5. Rodar o Projeto
+
 
 npm run dev
-Acesse no navegador: http://localhost:5173
